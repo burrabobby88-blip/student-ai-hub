@@ -175,13 +175,61 @@ class _SignInPageState extends State<SignInPage> {
   }
 
   void signIn() {
-    Navigator.pushReplacement(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const HomePage(),
+  final email = emailController.text.trim().toLowerCase();
+  final password = passwordController.text.trim();
+
+  if (email.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please enter your Gmail address.'),
       ),
     );
+    return;
   }
+
+  final gmailRegex =
+      RegExp(r'^[a-zA-Z0-9._%+-]+@gmail\.com$');
+
+  if (!gmailRegex.hasMatch(email)) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please enter a valid Gmail address.'),
+      ),
+    );
+    return;
+  }
+
+  if (password.isEmpty) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(
+        content: Text('Please enter your password.'),
+      ),
+    );
+    return;
+  }
+
+  final username = email.split('@').first;
+
+  final displayName = username
+      .replaceAll(RegExp(r'[._-]+'), ' ')
+      .split(' ')
+      .where((word) => word.isNotEmpty)
+      .map(
+        (word) =>
+            word[0].toUpperCase() + word.substring(1),
+      )
+      .join(' ');
+
+  Navigator.pushReplacement(
+    context,
+    MaterialPageRoute(
+      builder: (_) => HomePage(
+        userName: displayName,
+        userEmail: email,
+      ),
+    ),
+  );
+}
 
   @override
   Widget build(BuildContext context) {
@@ -300,232 +348,79 @@ class _SignInPageState extends State<SignInPage> {
 // HOME PAGE
 // ======================================================
 
-class HomePage extends StatelessWidget {
-  const HomePage({super.key});
+class HomePage extends StatefulWidget {
+  final String userName;
+  final String userEmail;
+
+  const HomePage({
+    super.key,
+    required this.userName,
+    required this.userEmail,
+  });
+
+  @override
+  State<HomePage> createState() => _HomePageState();
+}
+
+class _HomePageState extends State<HomePage> {
+  int selectedIndex = 0;
 
   @override
   Widget build(BuildContext context) {
+    final pages = [
+      _buildHomeContent(),
+      ExplorePage(
+        userName: widget.userName,
+        userEmail: widget.userEmail,
+      ),
+      ProfilePage(
+        userName: widget.userName,
+        userEmail: widget.userEmail,
+      ),
+    ];
+
     return Scaffold(
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        title: const Text(
-          'StudentAI Hub 🤖',
-          style: TextStyle(
-            fontWeight: FontWeight.bold,
-          ),
-        ),
-        actions: [
-          IconButton(
-            onPressed: () {},
-            icon: const Icon(
-              Icons.notifications_none_rounded,
-            ),
-          ),
-          const SizedBox(width: 8),
-        ],
-      ),
-      body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(18, 8, 18, 25),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(22),
-              decoration: BoxDecoration(
-                gradient: const LinearGradient(
-                  colors: [
-                    Color(0xFF4F46E5),
-                    Color(0xFF7C3AED),
-                  ],
-                  begin: Alignment.topLeft,
-                  end: Alignment.bottomRight,
+      appBar: selectedIndex == 0
+          ? AppBar(
+              elevation: 0,
+              backgroundColor: Colors.transparent,
+              title: const Text(
+                'StudentAI Hub 🤖',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
                 ),
-                borderRadius: BorderRadius.circular(24),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 12,
-                    offset: Offset(0, 6),
-                  ),
-                ],
               ),
-              child: const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Hello 👋',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 16,
-                    ),
+              actions: [
+                IconButton(
+                  onPressed: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => const NoticesPage(),
+                      ),
+                    );
+                  },
+                  icon: const Icon(
+                    Icons.notifications_none_rounded,
                   ),
-                  SizedBox(height: 6),
-                  Text(
-                    'Welcome back!',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 28,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  SizedBox(height: 8),
-                  Text(
-                    'Learn smarter. Create faster. Grow better.',
-                    style: TextStyle(
-                      color: Colors.white70,
-                      fontSize: 14,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 28),
-            const Text(
-              'Student Tools',
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 15),
-            GridView.count(
-              crossAxisCount: 2,
-              crossAxisSpacing: 14,
-              mainAxisSpacing: 14,
-              shrinkWrap: true,
-              physics: const NeverScrollableScrollPhysics(),
-              children: [
-                HomeFeatureCard(
-                  icon: Icons.document_scanner_rounded,
-                  title: 'AI Scanner',
-                  subtitle: 'Scan documents',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const ScannerPage(),
-                      ),
-                    );
-                  },
                 ),
-
-                // ================= CAREER =================
-                HomeFeatureCard(
-                  icon: Icons.work_rounded,
-                  title: 'AIML Career',
-                  subtitle: 'Career guidance',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const CareerPage(),
-                      ),
-                    );
-                  },
-                ),
-
-                HomeFeatureCard(
-                  icon: Icons.smart_toy_rounded,
-                  title: 'AI Prompts',
-                  subtitle: 'Useful prompts',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const AIPromptsPage(),
-                      ),
-                    );
-                  },
-                ),
-
-                // ================= AI POSTERS =================
-                HomeFeatureCard(
-  icon: Icons.palette_rounded,
-  title: 'AI Posters',
-  subtitle: 'Create posters',
-  onTap: () {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => const AIPosterPage(),
-      ),
-    );
-  },
-),
-
-                HomeFeatureCard(
-                  icon: Icons.menu_book_rounded,
-                  title: 'Study AI',
-                  subtitle: 'Study smarter',
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      MaterialPageRoute(
-                        builder: (_) => const StudyPlannerPage(),
-                      ),
-                    );
-                  },
-                ),
+                const SizedBox(width: 8),
               ],
-            ),
-            const SizedBox(height: 28),
-            const Text(
-              'Quick Start',
-              style: TextStyle(
-                fontSize: 23,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 15),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(20),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(20),
-                boxShadow: const [
-                  BoxShadow(
-                    color: Colors.black12,
-                    blurRadius: 10,
-                    offset: Offset(0, 4),
-                  ),
-                ],
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    padding: const EdgeInsets.all(13),
-                    decoration: BoxDecoration(
-                      color: Colors.indigo.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(15),
-                    ),
-                    child: const Icon(
-                      Icons.auto_awesome_rounded,
-                      color: Colors.indigo,
-                      size: 30,
-                    ),
-                  ),
-                  const SizedBox(width: 15),
-                  const Expanded(
-                    child: Text(
-                      'Use AI tools to make your student life easier.',
-                      style: TextStyle(
-                        fontSize: 15,
-                        fontWeight: FontWeight.w600,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+            )
+          : null,
+
+      body: IndexedStack(
+        index: selectedIndex,
+        children: pages,
       ),
+
       bottomNavigationBar: NavigationBar(
-        selectedIndex: 0,
-        onDestinationSelected: (_) {},
+        selectedIndex: selectedIndex,
+        onDestinationSelected: (index) {
+          setState(() {
+            selectedIndex = index;
+          });
+        },
         destinations: const [
           NavigationDestination(
             icon: Icon(Icons.home_outlined),
@@ -541,6 +436,244 @@ class HomePage extends StatelessWidget {
             icon: Icon(Icons.person_outline_rounded),
             selectedIcon: Icon(Icons.person_rounded),
             label: 'Profile',
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildHomeContent() {
+    return SingleChildScrollView(
+      padding: const EdgeInsets.fromLTRB(
+        18,
+        8,
+        18,
+        25,
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(22),
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                colors: [
+                  Color(0xFF4F46E5),
+                  Color(0xFF7C3AED),
+                ],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+              ),
+              borderRadius: BorderRadius.circular(24),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 12,
+                  offset: Offset(0, 6),
+                ),
+              ],
+            ),
+            child: Column(
+              crossAxisAlignment:
+                  CrossAxisAlignment.start,
+              children: [
+                const Text(
+                  'Hello 👋',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 16,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  widget.userName,
+                  style: const TextStyle(
+                    color: Colors.white,
+                    fontSize: 28,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                const SizedBox(height: 8),
+                const Text(
+                  'Learn smarter. Create faster. Grow better.',
+                  style: TextStyle(
+                    color: Colors.white70,
+                    fontSize: 14,
+                  ),
+                ),
+              ],
+            ),
+          ),
+
+          const SizedBox(height: 28),
+
+          const Text(
+            'Student Tools',
+            style: TextStyle(
+              fontSize: 23,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 15),
+
+          GridView.count(
+            crossAxisCount: 2,
+            crossAxisSpacing: 14,
+            mainAxisSpacing: 14,
+            shrinkWrap: true,
+            physics:
+                const NeverScrollableScrollPhysics(),
+            children: [
+              HomeFeatureCard(
+                icon: Icons.document_scanner_rounded,
+                title: 'AI Scanner',
+                subtitle: 'Scan documents',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const ScannerPage(),
+                    ),
+                  );
+                },
+              ),
+
+              HomeFeatureCard(
+                icon: Icons.work_rounded,
+                title: 'AIML Career',
+                subtitle: 'Career guidance',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const CareerPage(),
+                    ),
+                  );
+                },
+              ),
+
+              HomeFeatureCard(
+                icon: Icons.smart_toy_rounded,
+                title: 'AI Prompts',
+                subtitle: 'Useful prompts',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const AIPromptsPage(),
+                    ),
+                  );
+                },
+              ),
+
+              HomeFeatureCard(
+                icon: Icons.palette_rounded,
+                title: 'AI Posters',
+                subtitle: 'Create posters',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const AIPosterPage(),
+                    ),
+                  );
+                },
+              ),
+
+              HomeFeatureCard(
+                icon: Icons.menu_book_rounded,
+                title: 'Study AI',
+                subtitle: 'Study smarter',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const StudyPlannerPage(),
+                    ),
+                  );
+                },
+              ),
+
+              HomeFeatureCard(
+                icon: Icons.notifications_rounded,
+                title: 'Notices',
+                subtitle: 'Student updates',
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) =>
+                          const NoticesPage(),
+                    ),
+                  );
+                },
+              ),
+            ],
+          ),
+
+          const SizedBox(height: 28),
+
+          const Text(
+            'Quick Start',
+            style: TextStyle(
+              fontSize: 23,
+              fontWeight: FontWeight.bold,
+            ),
+          ),
+
+          const SizedBox(height: 15),
+
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(20),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius:
+                  BorderRadius.circular(20),
+              boxShadow: const [
+                BoxShadow(
+                  color: Colors.black12,
+                  blurRadius: 10,
+                  offset: Offset(0, 4),
+                ),
+              ],
+            ),
+            child: Row(
+              children: [
+                Container(
+                  padding:
+                      const EdgeInsets.all(13),
+                  decoration: BoxDecoration(
+                    color: Colors.indigo
+                        .withValues(alpha: 0.1),
+                    borderRadius:
+                        BorderRadius.circular(15),
+                  ),
+                  child: const Icon(
+                    Icons.auto_awesome_rounded,
+                    color: Colors.indigo,
+                    size: 30,
+                  ),
+                ),
+                const SizedBox(width: 15),
+                const Expanded(
+                  child: Text(
+                    'Use AI tools to make your student life easier.',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w600,
+                    ),
+                  ),
+                ),
+              ],
+            ),
           ),
         ],
       ),
@@ -3362,5 +3495,364 @@ class _AIPosterPageState extends State<AIPosterPage> {
           end: Alignment.bottomRight,
         );
     }
+  }
+}
+class ExplorePage extends StatelessWidget {
+  final String userName;
+  final String userEmail;
+
+  const ExplorePage({
+    super.key,
+    required this.userName,
+    required this.userEmail,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'Explore 🔎',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          crossAxisAlignment:
+              CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Hi $userName 👋',
+              style: const TextStyle(
+                fontSize: 27,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            const Text(
+              'Explore everything available in StudentAI Hub.',
+              style: TextStyle(
+                color: Colors.grey,
+                fontSize: 15,
+              ),
+            ),
+
+            const SizedBox(height: 25),
+
+            _exploreCard(
+              context,
+              Icons.document_scanner_rounded,
+              'AI Scanner',
+              'Analyze documents and questions.',
+              const ScannerPage(),
+            ),
+
+            _exploreCard(
+              context,
+              Icons.menu_book_rounded,
+              'Study Planner',
+              'Plan your studies and use the timer.',
+              const StudyPlannerPage(),
+            ),
+
+            _exploreCard(
+              context,
+              Icons.smart_toy_rounded,
+              'AI Prompts',
+              'Get ready-to-use prompts for studying.',
+              const AIPromptsPage(),
+            ),
+
+            _exploreCard(
+              context,
+              Icons.work_rounded,
+              'AIML Career',
+              'Explore AI and Machine Learning careers.',
+              const CareerPage(),
+            ),
+
+            _exploreCard(
+              context,
+              Icons.palette_rounded,
+              'AI Posters',
+              'Create beautiful student posters.',
+              const AIPosterPage(),
+            ),
+
+            _exploreCard(
+              context,
+              Icons.notifications_rounded,
+              'Notices',
+              'Check important student updates.',
+              const NoticesPage(),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _exploreCard(
+    BuildContext context,
+    IconData icon,
+    String title,
+    String description,
+    Widget page,
+  ) {
+    return Card(
+      margin: const EdgeInsets.only(bottom: 14),
+      elevation: 2,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(18),
+      ),
+      child: ListTile(
+        contentPadding:
+            const EdgeInsets.all(14),
+        leading: Container(
+          padding: const EdgeInsets.all(12),
+          decoration: BoxDecoration(
+            color: Colors.indigo
+                .withValues(alpha: 0.1),
+            borderRadius:
+                BorderRadius.circular(14),
+          ),
+          child: Icon(
+            icon,
+            color: Colors.indigo,
+            size: 28,
+          ),
+        ),
+        title: Text(
+          title,
+          style: const TextStyle(
+            fontWeight: FontWeight.bold,
+            fontSize: 17,
+          ),
+        ),
+        subtitle: Padding(
+          padding:
+              const EdgeInsets.only(top: 5),
+          child: Text(description),
+        ),
+        trailing: const Icon(
+          Icons.arrow_forward_ios_rounded,
+          size: 18,
+        ),
+        onTap: () {
+          Navigator.push(
+            context,
+            MaterialPageRoute(
+              builder: (_) => page,
+            ),
+          );
+        },
+      ),
+    );
+  }
+}
+class ProfilePage extends StatelessWidget {
+  final String userName;
+  final String userEmail;
+
+  const ProfilePage({
+    super.key,
+    required this.userName,
+    required this.userEmail,
+  });
+
+  void logout(BuildContext context) {
+    Navigator.pushAndRemoveUntil(
+      context,
+      MaterialPageRoute(
+        builder: (_) => const SignInPage(),
+      ),
+      (route) => false,
+    );
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(
+        title: const Text(
+          'My Profile 👤',
+          style: TextStyle(
+            fontWeight: FontWeight.bold,
+          ),
+        ),
+        centerTitle: true,
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.all(20),
+        child: Column(
+          children: [
+            const SizedBox(height: 15),
+
+            CircleAvatar(
+              radius: 55,
+              backgroundColor: Colors.indigo,
+              child: Text(
+                userName.isNotEmpty
+                    ? userName[0].toUpperCase()
+                    : 'U',
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 42,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 18),
+
+            Text(
+              userName,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                fontSize: 27,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+
+            const SizedBox(height: 6),
+
+            Text(
+              userEmail,
+              textAlign: TextAlign.center,
+              style: const TextStyle(
+                color: Colors.grey,
+                fontSize: 15,
+              ),
+            ),
+
+            const SizedBox(height: 30),
+
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(20),
+              decoration: BoxDecoration(
+                color: Colors.white,
+                borderRadius:
+                    BorderRadius.circular(20),
+                boxShadow: const [
+                  BoxShadow(
+                    color: Colors.black12,
+                    blurRadius: 10,
+                    offset: Offset(0, 4),
+                  ),
+                ],
+              ),
+              child: Column(
+                children: [
+                  const Icon(
+                    Icons.school_rounded,
+                    color: Colors.indigo,
+                    size: 42,
+                  ),
+                  const SizedBox(height: 12),
+                  const Text(
+                    'StudentAI Hub Student',
+                    style: TextStyle(
+                      fontSize: 18,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  const Text(
+                    'Learn smarter. Create faster. Grow better.',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      color: Colors.grey,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+
+            const SizedBox(height: 20),
+
+            ListTile(
+              tileColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(16),
+              ),
+              leading: const Icon(
+                Icons.email_outlined,
+                color: Colors.indigo,
+              ),
+              title: const Text(
+                'Email',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              subtitle: Text(userEmail),
+            ),
+
+            const SizedBox(height: 12),
+
+            ListTile(
+              tileColor: Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius:
+                    BorderRadius.circular(16),
+              ),
+              leading: const Icon(
+                Icons.person_outline_rounded,
+                color: Colors.indigo,
+              ),
+              title: const Text(
+                'Student Name',
+                style: TextStyle(
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              subtitle: Text(userName),
+            ),
+
+            const SizedBox(height: 30),
+
+            SizedBox(
+              width: double.infinity,
+              height: 52,
+              child: OutlinedButton.icon(
+                onPressed: () {
+                  logout(context);
+                },
+                icon: const Icon(
+                  Icons.logout_rounded,
+                  color: Colors.red,
+                ),
+                label: const Text(
+                  'Logout',
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(
+                    color: Colors.red,
+                  ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius:
+                        BorderRadius.circular(15),
+                  ),
+                ),
+              ),
+            ),
+
+            const SizedBox(height: 20),
+          ],
+        ),
+      ),
+    );
   }
 }
